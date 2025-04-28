@@ -2,7 +2,6 @@ package controller
 
 import (
 	"LoadBalancer/TimeLimiter/pkg/model"
-	"LoadBalancer/TimeLimiter/pkg/repository"
 	"LoadBalancer/TimeLimiter/pkg/service"
 	"encoding/json"
 	"fmt"
@@ -23,15 +22,13 @@ type UserController interface {
 }
 
 type UserControllerImpl struct {
-	repo         repository.UserRepo
-	rateSevice   *service.RateLimiterService
+	userSevice   *service.UserserviceImpl
 	LBcontroller controller.LoadBalancerController
 }
 
-func NewUserControllerImpl(repo repository.UserRepo, rateService *service.RateLimiterService, LBcontroller controller.LoadBalancerController) *UserControllerImpl {
+func NewUserControllerImpl(userSevice *service.UserserviceImpl, LBcontroller controller.LoadBalancerController) *UserControllerImpl {
 	return &UserControllerImpl{
-		repo:         repo,
-		rateSevice:   rateService,
+		userSevice:   userSevice,
 		LBcontroller: LBcontroller,
 	}
 }
@@ -47,7 +44,7 @@ func (con *UserControllerImpl) AddClient(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if err := con.repo.AddClient(config); err != nil {
+	if err := con.userSevice.AddClient(config); err != nil {
 		log.Printf("AddClient: Error adding client to repository: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -66,7 +63,7 @@ func (con *UserControllerImpl) DeleteClient(w http.ResponseWriter, r *http.Reque
 	vars := mux.Vars(r)
 	clientID := vars["client_id"]
 
-	if err := con.repo.DeleteClient(clientID); err != nil {
+	if err := con.userSevice.DeleteClient(clientID); err != nil {
 		log.Printf("DeleteClient: Error deleting client from repository: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -89,7 +86,7 @@ func (con *UserControllerImpl) UpdateClient(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	if err := con.repo.UpdateClient(config); err != nil {
+	if err := con.userSevice.UpdateClient(config); err != nil {
 		log.Printf("UpdateClient: Error updating client in repository: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -113,7 +110,7 @@ func (con *UserControllerImpl) CheckRateLimit(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	allowed := con.rateSevice.Allow(clientID)
+	allowed := con.userSevice.Allow(clientID)
 	if allowed {
 		log.Printf("CheckRateLimit: Request allowed for client_id: %s", clientID)
 		con.LBcontroller.BalanceRequest(w, r)

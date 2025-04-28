@@ -11,10 +11,10 @@ type RateLimiterService struct {
 	mu         sync.RWMutex
 	ticker     *time.Ticker
 	tickerStop chan bool
-	repo       repository.UserRepo
+	repo       repository.RateLimiterRepo
 }
 
-func NewRateLimiter(repo repository.UserRepo) (*RateLimiterService, error) {
+func NewRateLimiter(repo repository.RateLimiterRepo) (*RateLimiterService, error) {
 	rl := &RateLimiterService{
 		repo:       repo,
 		tickerStop: make(chan bool),
@@ -59,7 +59,7 @@ func (rl *RateLimiterService) Allow(clientID string) bool {
 	rl.mu.RUnlock()
 
 	if !ok {
-		return true
+		return false
 	}
 
 	if bucket.Take(1) {

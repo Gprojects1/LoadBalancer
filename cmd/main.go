@@ -94,15 +94,17 @@ func main() {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
 
-	repo := repository.NewUserRepoImpl(db)
-	rl, err := service.NewRateLimiter(repo)
+	userRepo := repository.NewUserRepoImpl(db)
+	tlRepo := repository.NewRlRepoImpl(userRepo)
+
+	rl, err := service.NewRateLimiter(tlRepo)
 	if err != nil {
 		log.Fatalf("Failed to make RateLimiter: %v", err)
 	}
 	defer rl.StopRefill()
-
+	userService := service.NewUserserviceImpl(rl, userRepo)
 	router := mux.NewRouter()
-	handler := controller.NewUserControllerImpl(repo, rl, lbController)
+	handler := controller.NewUserControllerImpl(userService, lbController)
 
 	router.HandleFunc("/clients", handler.AddClient).Methods("POST")
 	router.HandleFunc("/clients/{client_id}", handler.DeleteClient).Methods("DELETE")
