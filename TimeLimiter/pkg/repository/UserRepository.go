@@ -35,7 +35,6 @@ func (r *UserRepoImpl) AddClient(config model.ClientConfig) error {
 	r.Mutex.Lock()
 
 	log.Printf("Attempting to add client with ID %s", config.ClientID)
-
 	if _, ok := r.Buckets[config.ClientID]; ok {
 		err := fmt.Errorf("client with ID %s already exists", config.ClientID)
 		log.Printf("Client with ID %s already exists: %v", config.ClientID, err)

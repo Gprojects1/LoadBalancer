@@ -11,10 +11,10 @@ type Userservice interface {
 
 type UserserviceImpl struct {
 	RLservice *RateLimiterService
-	repo      repository.UserRepo
+	repo      *repository.UserRepoImpl
 }
 
-func NewUserserviceImpl(RLservice *RateLimiterService, repo repository.UserRepo) *UserserviceImpl {
+func NewUserserviceImpl(RLservice *RateLimiterService, repo *repository.UserRepoImpl) *UserserviceImpl {
 	return &UserserviceImpl{
 		RLservice: RLservice,
 		repo:      repo,
