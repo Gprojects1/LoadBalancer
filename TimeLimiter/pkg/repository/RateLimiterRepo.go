@@ -11,10 +11,10 @@ type RateLimiterRepo interface {
 }
 
 type RateLimiterRepoImpl struct {
-	usRepo UserRepo
+	usRepo *UserRepoImpl
 }
 
-func NewRlRepoImpl(db UserRepo) *RateLimiterRepoImpl {
+func NewRlRepoImpl(db *UserRepoImpl) *RateLimiterRepoImpl {
 	log.Println("Creating new NewRlRepoImpl")
 	return &RateLimiterRepoImpl{
 		usRepo: db,
