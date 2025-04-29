@@ -51,6 +51,8 @@ func (lb LoadBalancerImpl) BalanceRequest(w http.ResponseWriter, r *http.Request
 	var wg sync.WaitGroup
 	wg.Add(1)
 
+	errChan := make(chan error, 1)
+
 	go func() {
 		defer wg.Done()
 		peer.ReverseProxy.ServeHTTP(w, r)
@@ -58,11 +60,16 @@ func (lb LoadBalancerImpl) BalanceRequest(w http.ResponseWriter, r *http.Request
 
 	go func() {
 		wg.Wait()
+		close(errChan)
 	}()
 
 	select {
 	case <-ctx.Done():
 		log.Printf("Request canceled: %v", ctx.Err())
 		return
+	case err := <-errChan:
+		if err != nil {
+			log.Printf("Proxy error: %v", err)
+		}
 	}
 }
